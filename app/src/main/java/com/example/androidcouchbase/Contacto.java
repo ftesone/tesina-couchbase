@@ -34,10 +34,6 @@ public class Contacto {
             s.append(" @"+empresa);
         }
 
-        for (Telefono telefono : telefonos) {
-            s.append(" +"+telefono.numero+" {"+telefono.tipo.name()+"}");
-        }
-
         return s.toString();
     }
 }
