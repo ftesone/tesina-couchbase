@@ -3,22 +3,10 @@ package com.example.androidcouchbase;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.couchbase.lite.Array;
-import com.couchbase.lite.ArrayExpression;
 import com.couchbase.lite.CouchbaseLite;
 import com.couchbase.lite.CouchbaseLiteException;
-import com.couchbase.lite.DataSource;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseConfiguration;
-import com.couchbase.lite.Dictionary;
-import com.couchbase.lite.Expression;
-import com.couchbase.lite.From;
-import com.couchbase.lite.Function;
-import com.couchbase.lite.Ordering;
-import com.couchbase.lite.Query;
-import com.couchbase.lite.QueryBuilder;
-import com.couchbase.lite.Result;
-import com.couchbase.lite.SelectResult;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -33,7 +21,6 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -80,58 +67,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         CouchbaseLite.init(getApplicationContext());
-
-        DatabaseConfiguration config = new DatabaseConfiguration();
-        Database database;
         try {
-            database = new Database(String.valueOf(R.string.database), config);
+            ContactoDao contactoDao = ContactoDao.getInstance(new Database(String.valueOf(R.string.database), new DatabaseConfiguration()));
 
-            Query query = QueryBuilder
-                .select(SelectResult.all())
-                .from(DataSource.database(database))
-            ;
-
-            if (busqueda != null) {
-                Expression busquedaLike = Expression.string("%"+busqueda.toLowerCase()+"%");
-                query = ((From) query)
-                    .where(Function.lower(Expression.property("apellido")).like(busquedaLike)
-                        .or(Function.lower(Expression.property("nombre")).like(busquedaLike))
-                        .or(Function.lower(Expression.property("fechaNacimiento")).like(busquedaLike))
-                        .or(Function.lower(Expression.property("apodo")).like(busquedaLike))
-                        .or(Function.lower(Expression.property("empresa")).like(busquedaLike))
-                        .or(ArrayExpression.any(ArrayExpression.variable("telefono"))
-                            .in(Expression.property("telefonos"))
-                            .satisfies(ArrayExpression.variable("telefono.numero").like(Expression.string("%"+busqueda.toLowerCase()+"%")))
-                        )
-                    )
-                    .orderBy(Ordering.property("apellido").ascending(), Ordering.property("nombre").ascending())
-                ;
-            } else {
-                query = ((From) query).orderBy(Ordering.property("apellido").ascending(), Ordering.property("nombre").ascending());
-            }
-
-            List<Result> resultados = query.execute().allResults();
-            List<Contacto> contactos = new ArrayList<>();
-
-            for (Result resultado : resultados) {
-                Contacto contacto = new Contacto();
-                contacto.apellido = resultado.getDictionary(0).getString("apellido");
-                contacto.nombre = resultado.getDictionary(0).getString("nombre");
-                contacto.fechaNacimiento = resultado.getDictionary(0).getDate("fechaNacimiento");
-                contacto.apodo = resultado.getDictionary(0).getString("apodo");
-                contacto.empresa = resultado.getDictionary(0).getString("empresa");
-
-                Array telefonosArray = resultado.getDictionary(0).getArray("telefonos");
-                for (int i=0, j=telefonosArray.count() ; i<j ; i++) {
-                    Dictionary telefonoDictionary = telefonosArray.getDictionary(i);
-                    Telefono telefono = new Telefono();
-                    telefono.numero = telefonoDictionary.getString("numero");
-                    telefono.tipo = TipoTelefono.valueOf(telefonoDictionary.getString("tipo"));
-                    contacto.telefonos.add(telefono);
-                }
-
-                contactos.add(contacto);
-            }
+            List<Contacto> contactos = busqueda == null ? contactoDao.obtenerTodos() : contactoDao.obtenerPorBusqueda(busqueda);
 
             TextView textView = (TextView) findViewById(R.id.busqueda);
             textView.setText(busqueda != null ? "Término de búsqueda: "+busqueda : null);

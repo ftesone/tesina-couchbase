@@ -12,9 +12,6 @@ import com.couchbase.lite.CouchbaseLite;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseConfiguration;
-import com.couchbase.lite.MutableArray;
-import com.couchbase.lite.MutableDictionary;
-import com.couchbase.lite.MutableDocument;
 
 import java.util.Calendar;
 import java.util.Date;
@@ -48,48 +45,34 @@ public class CreateActivity extends AppCompatActivity {
             empresa = empresas[random(0, empresas.length-1)];
         }
 
+        Contacto contacto = new Contacto();
+        contacto.apellido = apellido;
+        contacto.nombre = nombre;
+
+        if (apodo != null) {
+            contacto.apodo = apodo;
+        }
+
+        if (fechaNacimiento != null) {
+            contacto.fechaNacimiento = fechaNacimiento;
+        }
+
+        if (empresa != null) {
+            contacto.empresa = empresa;
+        }
+
+        for (int i=0, j=random(0,4) ; i<=j ; i++) {
+            Telefono telefono = new Telefono();
+            telefono.numero = String.valueOf(random(1000,9999));
+            telefono.tipo = getRandomTipoTelefono();
+            contacto.telefonos.add(telefono);
+        }
+
         CouchbaseLite.init(getApplicationContext());
-
-        DatabaseConfiguration config = new DatabaseConfiguration();
-        Database database;
         try {
-            database = new Database(String.valueOf(R.string.database), config);
-
-            Contacto contacto = new Contacto();
-            MutableDocument contactoDocument = new MutableDocument();
-
-            contactoDocument.setString("apellido", contacto.apellido = apellido);
-            contactoDocument.setString("nombre", contacto.nombre = nombre);
-
-            if (apodo != null) {
-                contactoDocument.setString("apodo", contacto.apodo = apodo);
-            }
-
-            if (fechaNacimiento != null) {
-                contactoDocument.setDate("fechaNacimiento", contacto.fechaNacimiento = fechaNacimiento);
-            }
-
-            if (empresa != null) {
-                contactoDocument.setString("empresa", contacto.empresa = empresa);
-            }
-
-            MutableArray telefonosArray = new MutableArray();
-            for (int i=0, j=random(0,4) ; i<=j ; i++) {
-                Telefono telefono = new Telefono();
-                MutableDictionary telefonoDictionary = new MutableDictionary();
-
-                telefonoDictionary.setString("numero", telefono.numero = String.valueOf(random(1000,9999)));
-                telefonoDictionary.setString("tipo", (telefono.tipo = getRandomTipoTelefono()).toString());
-
-                contacto.telefonos.add(telefono);
-                telefonosArray.addDictionary(telefonoDictionary);
-            }
-
-            if (telefonosArray.count() > 0) {
-                contactoDocument.setArray("telefonos", telefonosArray);
-            }
-
-            database.save(contactoDocument);
+            ContactoDao.getInstance(new Database(String.valueOf(R.string.database), new DatabaseConfiguration()))
+                .insert(contacto)
+            ;
 
             TextView textView = (TextView) findViewById(R.id.contacto);
             textView.setText(contacto.toString());
