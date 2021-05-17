@@ -13,8 +13,10 @@ import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.DatabaseConfiguration;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 
 public class CreateActivity extends AppCompatActivity {
     private static String[] apellidos = {"Sánchez", "Ginóbilli", "Montecchia", "Oberto", "Victoriano", "Fernández", "Sconochini", "Scola", "Gutiérrez", "Nocioni", "Palladino", "Wolkowyski", "Magnano"};
@@ -45,6 +47,21 @@ public class CreateActivity extends AppCompatActivity {
             empresa = empresas[random(0, empresas.length-1)];
         }
 
+        Direccion direccion = null;
+        if (0 == random(0,3)) {
+            direccion = new Direccion();
+            direccion.calle = String.valueOf(random(1, 72));
+            direccion.nro = String.valueOf(random(100, 1000));
+
+            if (0 != random(0,2)) {
+                direccion.piso = random(1,15) + "º";
+            }
+
+            if (0 != random(0,2)) {
+                direccion.depto = String.valueOf((char) random(65,70));
+            }
+        }
+
         Contacto contacto = new Contacto();
         contacto.apellido = apellido;
         contacto.nombre = nombre;
@@ -61,11 +78,19 @@ public class CreateActivity extends AppCompatActivity {
             contacto.empresa = empresa;
         }
 
+        if (direccion != null) {
+            contacto.direccion = direccion;
+        }
+
         for (int i=0, j=random(0,4) ; i<=j ; i++) {
             Telefono telefono = new Telefono();
             telefono.numero = String.valueOf(random(1000,9999));
             telefono.tipo = getRandomTipoTelefono();
             contacto.telefonos.add(telefono);
+        }
+
+        for (int i=0, j=random(0,4) ; i<=j ; i++) {
+            contacto.emails.add(contacto.nombre.toLowerCase().charAt(0) + contacto.apellido.toLowerCase() + (i==0 ? "" : i) + "@mail.com");
         }
 
         CouchbaseLite.init(getApplicationContext());

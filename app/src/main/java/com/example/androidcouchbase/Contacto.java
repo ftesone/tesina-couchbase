@@ -14,7 +14,9 @@ public class Contacto {
     public Date fechaNacimiento;
     public String apodo;
     public String empresa;
+    public Direccion direccion;
     public List<Telefono> telefonos = new ArrayList<>();
+    public List<String> emails = new ArrayList<>();
 
     @NonNull
     @Override
@@ -32,6 +34,30 @@ public class Contacto {
 
         if (empresa != null) {
             s.append(" @"+empresa);
+        }
+
+        if (direccion != null) {
+            s.append("DIR: "+direccion.calle + " "+ direccion.nro);
+
+            if (direccion.piso != null || direccion.depto != null) {
+                s.append(" ");
+
+                if (direccion.piso != null) {
+                    s.append(direccion.piso+"º");
+                }
+
+                if (direccion.depto != null) {
+                    s.append(direccion.depto);
+                }
+            }
+        }
+
+        for (Telefono telefono : telefonos) {
+            s.append("["+telefono.tipo.name()+": "+telefono.numero+"]");
+        }
+
+        for (String email : emails) {
+            s.append("<"+email+">");
         }
 
         return s.toString();
